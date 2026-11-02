@@ -675,7 +675,7 @@ Protected functionality includes:
 
 ## 👨‍💻 Author
 
-**Ayush Mishra**
+**Hrusikesh Sahu**
 
 B.Tech Computer Science & Engineering
 
