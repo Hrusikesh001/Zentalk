@@ -39,12 +39,14 @@ export const sendMessage = async (req, res) => {
         sender: sender_id,
         receiver: receiver_id,
         message: message,
+        status: "sent",
       });
     }else{
       newMessage = await Message.create({
         sender: sender_id,
         receiver: receiver_id,
         attachment: attachment,
+        status: "sent",
       });
     }
 

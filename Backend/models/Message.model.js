@@ -19,14 +19,31 @@ const messageSchema = mongoose.Schema({
     trim: true,
   },
 
-  attachment : [{
-    attachmentUrl : {
-      type : String,
+  attachment: [{
+    attachmentUrl: {
+      type: String,
     },
-    attachmentMessage : {
-      type : String,
+    attachmentMessage: {
+      type: String,
     }
   }],
+
+  // Message delivery and read receipts
+  status: {
+    type: String,
+    enum: ['sent', 'delivered', 'read'],
+    default: 'sent',
+  },
+
+  deliveredAt: {
+    type: Date,
+    default: null,
+  },
+
+  readAt: {
+    type: Date,
+    default: null,
+  },
 
   createdAt: {
     type: Date,
@@ -34,46 +51,9 @@ const messageSchema = mongoose.Schema({
   }
 
 }, {
-  timestamps : true,
-});
+  timestamps: true,
+})
 
+const Message = mongoose.model('Message', messageSchema)
 
-const Message = mongoose.model("Message", messageSchema);
-
-export default Message;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+export default Message

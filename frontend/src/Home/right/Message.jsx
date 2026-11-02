@@ -4,7 +4,18 @@ import { Box } from '@mui/material';
 import RenderAttachment from './RenderAttachment';
 import { fileFormat } from '../../lib/features';
 
+// Added for message delivery/read receipts
+function MessageStatus({ status }) {
+  if (status === "read") {
+    return <span className="ml-1 text-blue-400">✓✓</span>;
+  }
 
+  if (status === "delivered") {
+    return <span className="ml-1 text-gray-300">✓✓</span>;
+  }
+
+  return <span className="ml-1 text-gray-300">✓</span>;
+}
 
 function Message({ message }) {
   const authUser = JSON.parse(localStorage.getItem("messenger"));
@@ -25,11 +36,20 @@ function Message({ message }) {
             <div className="chat-header">
               {message.sender.name}
             </div>
+
             <div className={`chat-bubble ${chatColor} max-w-[10rem] md:max-w-[20rem] lg:max-w-[30rem] break-words`}>
               {message.message}
             </div>
+
             <div className="chat-footer opacity-70 text-xs">
-              {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              {new Date(message.createdAt).toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit'
+              })}
+
+              {itsMe && !message.groupId && (
+                <MessageStatus status={message.status} />
+              )}
             </div>
           </div>
         </div>)
@@ -56,21 +76,29 @@ function Message({ message }) {
                   >
                     {RenderAttachment(file, url)}
                   </a>
+
                   <textarea
                     className="w-full bg-transparent border-none resize-none focus:outline-none placeholder-gray-400"
                     value={message.attachment[0].attachmentMessage}
                     readOnly
                   />
+
                   <p className="w-full bg-transparent border-none resize-none focus:outline-none placeholder-gray-400"></p>
                 </div>
               </div>
 
               <div className="chat-footer opacity-70 text-xs">
-                {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                {new Date(message.createdAt).toLocaleTimeString([], {
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
+
+                {itsMe && !message.groupId && (
+                  <MessageStatus status={message.status} />
+                )}
               </div>
             </div>
           </div>
-
         )
       }
     </div>
