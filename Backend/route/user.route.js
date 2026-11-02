@@ -1,5 +1,5 @@
 import express from "express";
-import { signup, login, logout, getUserProfile, editUserProfile, deleteUser, findUsersByUsername, sendUsers, generateAgoraToken, confirmDeleteAccount, deleteFriend, clearChat } from "../controller/user.controller.js";
+import { signup, login, googleLogin, logout, getUserProfile, editUserProfile, deleteUser, findUsersByUsername, sendUsers, generateAgoraToken, confirmDeleteAccount, deleteFriend, clearChat } from "../controller/user.controller.js";
 import { Router } from "express";
 import secureRoute from "../middleware/secureRoute.js";
 
@@ -8,6 +8,8 @@ const router = Router();
 router.post("/signup", signup);
 
 router.post("/login", login);
+
+router.post("/google", googleLogin);
 
 router.post("/logout", logout);
 

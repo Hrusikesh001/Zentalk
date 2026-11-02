@@ -3,6 +3,7 @@ import { useForm } from "react-hook-form"
 import TextField from '@mui/material/TextField';
 import axios from 'axios';
 import { useAuth } from '../context/AuthProvider';
+import { GoogleLogin } from "@react-oauth/google";
 import { Link } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import server from '../environment.js';
@@ -55,6 +56,32 @@ function Login() {
       });
   }
 
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+  try {
+    const response = await axios.post(
+      `${server}/user/google`,
+      {
+        credential: credentialResponse.credential,
+      },
+      {
+        withCredentials: true,
+      }
+    );
+
+    toast.success("Google login successful!");
+
+    // Keep the same auth state structure as your existing login
+    localStorage.setItem("messenger", JSON.stringify(response.data));
+    setAuthUser(response.data);
+  } catch (error) {
+    if (error.response) {
+      toast.error("Error: " + error.response.data.message);
+    } else {
+      toast.error("Google login failed. Please try again.");
+    }
+  }
+};
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-base-200 px-4">
@@ -169,6 +196,14 @@ function Login() {
               </button>
             </div>
           </form>
+          <div className="flex justify-center mt-4">
+  <GoogleLogin
+    onSuccess={handleGoogleSuccess}
+    onError={() => {
+      toast.error("Google Sign-In failed");
+    }}
+  />
+</div>
           <div className='mt-2'>
             <p>
               Don't have any account?

@@ -1,6 +1,7 @@
 import User from "../models/User.model.js";
 import bcrypt from "bcrypt";
 import createTokenAndSaveCookie from "../jwt/generateToken.js";
+import { OAuth2Client } from "google-auth-library";
 import Conversation from "../models/conversation.model.js";
 import Message from "../models/Message.model.js";
 import FriendRequest from '../models/FriendRequest.model.js'
@@ -96,6 +97,111 @@ export const login = async (req, res) => {
   } catch (e) {
     console.log(e);
     res.status(500).json({ message: "Server error" });
+  }
+};
+
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+export const googleLogin = async (req, res) => {
+  try {
+    const { credential } = req.body;
+
+    if (!credential) {
+      return res.status(400).json({
+        message: "Google credential is required",
+      });
+    }
+
+    // Verify the Google ID token
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+
+    if (!payload || !payload.email || !payload.sub) {
+      return res.status(401).json({
+        message: "Invalid Google account information",
+      });
+    }
+
+    if (!payload.email_verified) {
+      return res.status(401).json({
+        message: "Google email is not verified",
+      });
+    }
+
+    const email = payload.email.toLowerCase();
+    const googleId = payload.sub;
+
+    // Find an existing account by Google ID or email
+    let user = await User.findOne({
+      $or: [{ googleId }, { email }],
+    });
+
+    if (user && !user.active) {
+      return res.status(403).json({
+        message: "Account deleted! Cannot login.",
+      });
+    }
+
+    if (!user) {
+      // Generate a unique username from the email
+      const baseUsername = email.split("@")[0].replace(/[^a-zA-Z0-9_]/g, "");
+      let username = baseUsername || "zentalkuser";
+      let suffix = 1;
+
+      while (await User.findOne({ username })) {
+        username = `${baseUsername || "zentalkuser"}${suffix}`;
+        suffix++;
+      }
+
+      user = new User({
+        username,
+        name: payload.name || username,
+        email,
+        googleId,
+        authProvider: "google",
+        profilePicURL:
+          payload.picture ||
+          "https://www.gravatar.com/avatar/?d=mp&s=128",
+      });
+
+      await user.save();
+    } else {
+      // Link Google ID to an existing account using the same email
+      if (!user.googleId) {
+        user.googleId = googleId;
+      }
+
+      if (!user.authProvider) {
+        user.authProvider = "local";
+      }
+
+      await user.save();
+    }
+
+    // Use Zentalk's existing JWT cookie function
+    createTokenAndSaveCookie(user._id, res);
+
+    return res.status(200).json({
+      message: "Google login successful",
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        username: user.username,
+        profilePicURL: user.profilePicURL,
+      },
+    });
+  } catch (error) {
+    console.error("Google login error:", error);
+
+    return res.status(401).json({
+      message: "Google authentication failed",
+    });
   }
 };
 
